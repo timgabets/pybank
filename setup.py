@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='pybank',
-      version='0.1',
+      version='0.10',
       
       description='Core Banking Simulator',
       long_description=open('README').read(),
@@ -27,5 +27,5 @@ setup(name='pybank',
       
       license='LGPLv2',
       packages=['pybank'],
-      install_requires=[],
+      install_requires=['tracetools', 'pynblock', 'bpc8583'],
       zip_safe=True)
