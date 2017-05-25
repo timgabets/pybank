@@ -6,8 +6,21 @@ import os
 from pybank.cbs import CBS
 from pybank.db import Database 
 
+class TestGetFloatAmount(unittest.TestCase):
+    def setUp(self):
+        self.cbs = CBS(host=None, port=None)
+
+    def test_get_float_amount(self):
+       self.assertEqual(self.cbs.get_float_amount(3585, 643), 35.85)
+
+    def test_get_float_amount_large(self):
+       self.assertEqual(self.cbs.get_float_amount(999999999999, 643), 9999999999.99)
+
+    def test_get_float_amount_small(self):
+       self.assertEqual(self.cbs.get_float_amount(13, 643), 0.13)
+
+
 class TestGetMessageLength(unittest.TestCase):
-    
     def setUp(self):
         self.cbs = CBS(host=None, port=None)
 

@@ -32,6 +32,7 @@ class CBS:
             self.port = 3388
 
         self.db = Database('cbs.db')
+        self.responses = {'Approval': '00', 'Invalid account number': '14', 'Insufficient funds': '51', }
 
 
     def get_message_length(self, message):
@@ -55,6 +56,12 @@ class CBS:
     
         return '007' + str(len(balance_string)).zfill(3) + balance_string
 
+    def get_float_amount(self, amount, currency):
+        """
+        TODO: check currency exponent, currently using 2 by default
+        """
+        return amount / 100.0 
+
 
     def connect(self):
         """
@@ -72,13 +79,34 @@ class CBS:
 
 
     def process_trxn_balance_inquiry(self, response):
-        account_number = response.FieldData(2)
+        card_number = response.FieldData(2)
         currency_code = response.FieldData(49)
 
-        available_balance = self.db.get_card_balance(account_number, currency_code)
+        available_balance = self.db.get_card_balance(card_number, currency_code)
 
         response.FieldData(54, self.get_balance_string(available_balance, currency_code))
         response.FieldData(39, '00')
+
+    def process_trxn_debit_account(self, response):
+        """
+        """
+        card_number = response.FieldData(2)
+        currency_code = response.FieldData(51)
+        amount_cardholder_billing = self.get_float_amount(response.FieldData(6), currency_code)
+
+        available_balance = self.db.get_card_balance(card_number, currency_code)
+
+        if available_balance:
+            if available_balance > amount_cardholder_billing:
+                self.db.update_card_balance(card_number, currency_code, available_balance - amount_cardholder_billing)
+                response.FieldData(39, self.responses['Approval'])
+
+                available_balance = self.db.get_card_balance(card_number, currency_code)
+                response.FieldData(54, self.get_balance_string(available_balance, currency_code))
+            else:
+                response.FieldData(39, self.responses['Insufficient funds'])
+        else:
+            response.FieldData(39, self.responses['Invalid account number'])
 
 
     def run(self):
@@ -102,9 +130,13 @@ class CBS:
                     processing_code = str(request.FieldData(3)).zfill(6)
                     
                     if processing_code[0:2] == '31':
+                        # Balance
                         self.process_trxn_balance_inquiry(response)
+                    elif processing_code[0:2] in ['00', '01']:
+                        # Putchase or ATM Cash
+                        self.process_trxn_debit_account(response)
                     else:
-                        response.FieldData(39, '000')
+                        response.FieldData(39, self.responses['Approval'])
                         
                     # TODO: fix these fields:
                     response.RemoveField(9)
