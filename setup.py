@@ -26,6 +26,6 @@ setup(name='pybank',
       author_email='tim@gabets.ru',
       
       license='LGPLv2',
-      packages=['bpc8583'],
+      packages=['pybank'],
       install_requires=[],
       zip_safe=True)
