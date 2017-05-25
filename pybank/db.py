@@ -32,12 +32,13 @@ class Database:
 		else:
 			return None
 
-	def insert_card_record(self, card_record):
+
+	def insert_card_record(self, card, currency, balance):
 		"""
-		card_record is a tuple, containing neede values, e.g. ('2006-03-28', 'BUY', 'IBM', 1000, 45.00)
 		"""
+		t = (card, currency, balance)
 		try:
-			self.conn.execute('insert into CARDS values(?,?,?)', card_record)
+			self.conn.execute('insert into CARDS(card_no, currency, balance) values(?,?,?)', t)
 			self.conn.commit()
 		except (sqlite3.IntegrityError,sqlite3.ProgrammingError) as e:
 			print(e)

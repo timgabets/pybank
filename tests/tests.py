@@ -50,18 +50,15 @@ class TestDatabaseInsertCardRecord(unittest.TestCase):
         os.remove(self.db_name)
 
     def test_insert_valid_card_record(self):
-        self.assertTrue(self.db.insert_card_record(('8930011234567890', 826, 100500.00,)))
-
-    def test_insert_invalid_card_record(self):
-        self.assertFalse(self.db.insert_card_record(('8930011234567890', 100500.00)))
+        self.assertTrue(self.db.insert_card_record('8930011234567890', 826, 100500.00))
 
     def test_insert_duplicate_card_records(self):
-        self.assertTrue(self.db.insert_card_record(('8930011234567890', 826, 100500.00)))
-        self.assertFalse(self.db.insert_card_record(('8930011234567890', 826, 100500.00)))
+        self.assertTrue(self.db.insert_card_record('8930011234567890', 826, 100500.00))
+        self.assertFalse(self.db.insert_card_record('8930011234567890', 826, 100500.00))
 
     def test_insert_differenct_card_records(self):
-        self.assertTrue(self.db.insert_card_record(('3333333333333333', 826, 100500.00)))
-        self.assertTrue(self.db.insert_card_record(('4444444444444444', 826, 100500.00)))    
+        self.assertTrue(self.db.insert_card_record('3333333333333333', 826, 100500.00))
+        self.assertTrue(self.db.insert_card_record('4444444444444444', 826, 100500.00))    
     
 
 class TestDatabaseGetCardBalance(unittest.TestCase):
@@ -70,7 +67,7 @@ class TestDatabaseGetCardBalance(unittest.TestCase):
         self.db = Database(self.db_name)
         self.card = '8930011234567890'
         self.currency = 826
-        self.db.insert_card_record((self.card, self.currency, 100500.00))
+        self.db.insert_card_record(self.card, self.currency, 100500.00)
 
     def tearDown(self):
         os.remove(self.db_name)
@@ -97,7 +94,7 @@ class TestDatabaseAccountExists(unittest.TestCase):
         self.db = Database(self.db_name)
         self.card = '8930011234567890'
         self.currency = 826
-        self.db.insert_card_record((self.card, self.currency, 100500.00))
+        self.db.insert_card_record(self.card, self.currency, 100500.00)
 
     def tearDown(self):
         os.remove(self.db_name)
@@ -118,7 +115,7 @@ class TestDatabaseUpdateCardBalance(unittest.TestCase):
         self.db = Database(self.db_name)
         self.card = '8930011234567890'
         self.currency = 826
-        self.db.insert_card_record((self.card, self.currency, 100500.00))
+        self.db.insert_card_record(self.card, self.currency, 100500.00)
 
     def tearDown(self):
         os.remove(self.db_name)
