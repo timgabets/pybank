@@ -75,8 +75,8 @@ class CBS:
 
                 while True:
                     data = self.sock.recv(4096)
-                    #if len(data) > 0:
-                    #    trace('<< {} bytes received: '.format(len(data)), data)
+                    if len(data) > 0:
+                        trace(title='<< {} bytes received: '.format(len(data)), data=data)
                     
                     request = ISO8583(data[2:], IsoSpec1987BPC())
                     request.Print()
@@ -101,7 +101,7 @@ class CBS:
                     data = response.BuildIso()
                     data = self.get_message_length(data) + data
                     self.sock.send(data)
-                    #trace('>> {} bytes sent:'.format(len(data)), data)
+                    trace(title='>> {} bytes sent:'.format(len(data)), data=data)
         
             except ParseError:
                 print('Connection closed')

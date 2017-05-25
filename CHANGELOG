@@ -1,2 +1,3 @@
 May 2017
+	0.11 Fixed trace() raise() caused by tracetools changes in v0.23
 	0.10 Initial setup - code moved from bpc8583 library examples
