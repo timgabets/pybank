@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 
+import getopt 
+import sys
+
 from pybank.cbs import CBS
 
 def show_help(name):
