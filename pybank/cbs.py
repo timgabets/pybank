@@ -83,7 +83,9 @@ class CBS:
 
     def process_trxn_balance_inquiry(self, request, response):
         card_number = request.FieldData(2)
-        currency_code = request.FieldData(49)
+        currency_code = request.FieldData(51)
+        if not currency_code:
+            currency_code = request.FieldData(49)
 
         available_balance = self.db.get_card_balance(card_number, currency_code)
 
