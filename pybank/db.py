@@ -1,4 +1,7 @@
 import sqlite3
+import random
+from math import pow
+
 
 class Database:
 	def __init__(self, db_name=None):
@@ -18,14 +21,15 @@ class Database:
 	def db_init(self):
 		self.conn = sqlite3.connect(self.db_name)
 		self.cursor = self.conn.cursor()
-		self.conn.execute('create table CARDS (card_no text, currency text, balance real, constraint CARD_CURRENCY_UK unique(card_no, currency))')
+		self.conn.execute('create table ACCOUNTS (account_number INTEGER, type INTEGER default 0, currency INTEGER, balance real, constraint ACCOUNT_CURRENCY_UK unique(account_number, currency));')
+		self.conn.execute('create table CARDS (card_number INTEGER, currency INTEGER, account INTEGER, constraint CARD_CURRENCY_UK unique(card_number, currency), FOREIGN KEY(account) REFERENCES accounts(account_number));')
 
 
 	def get_card_balance(self, card, currency_code):
 		"""
 		"""
 		t = (card,currency_code)
-		self.cursor.execute('select balance from CARDS where card_no=? and currency=?', t)
+		self.cursor.execute('select balance from ACCOUNTS where account_number=(select account from CARDS where card_number=? and currency=?)', t)
 		row = self.cursor.fetchone()
 		if row:
 			return row[0]
@@ -33,12 +37,36 @@ class Database:
 			return None
 
 
+	def generate_account_number(self):
+		"""
+		"""
+		return '408178101000' + str(random.randint(pow(2, 8*2), pow(2, 8*4)))
+
+
+	def create_account(self, currency, balance):
+		"""
+		"""
+		account_number = self.generate_account_number()
+		t = (account_number, currency, balance)
+		try:
+			self.conn.execute('insert into ACCOUNTS(account_number, currency, balance) values(?,?,?)', t)
+			self.conn.commit()
+		except (sqlite3.IntegrityError,sqlite3.ProgrammingError) as e:
+			print(e)
+			return False
+		return account_number
+
+
 	def insert_card_record(self, card, currency, balance):
 		"""
 		"""
-		t = (card, currency, balance)
+		account_number = self.create_account(currency, balance)
+		if not account_number:
+			return False
+
+		t = (card, currency, account_number)
 		try:
-			self.conn.execute('insert into CARDS(card_no, currency, balance) values(?,?,?)', t)
+			self.conn.execute('insert into CARDS(card_number, currency, account) values(?,?,?)', t)
 			self.conn.commit()
 		except (sqlite3.IntegrityError,sqlite3.ProgrammingError) as e:
 			print(e)
@@ -49,10 +77,10 @@ class Database:
 	def update_card_balance(self, card, currency, new_balance):
 		"""
 		"""
-		if self.account_exists(card, currency):
+		if self.card_has_account(card, currency):
 			try:
 				t = (new_balance, card, currency)
-				self.cursor.execute('update CARDS set balance=? where card_no=? and currency=?', t)
+				self.cursor.execute('update ACCOUNTS set balance=? where account_number=(select account from cards where card_number=? and currency=?)', t)
 				self.conn.commit()
 				return True
 			except:
@@ -61,11 +89,11 @@ class Database:
 			return None
 
 
-	def account_exists(self, card, currency):
+	def card_has_account(self, card, currency):
 		"""
 		"""
 		t = (card,currency)
-		self.cursor.execute('select 1 from CARDS where card_no=? and currency=?', t)
+		self.cursor.execute('select 1 from CARDS where card_number=? and currency=?', t)
 		row = self.cursor.fetchone()
 		if row:
 			return True

@@ -72,7 +72,7 @@ class TestDatabaseInsertCardRecord(unittest.TestCase):
     def test_insert_differenct_card_records(self):
         self.assertTrue(self.db.insert_card_record('3333333333333333', 826, 100500.00))
         self.assertTrue(self.db.insert_card_record('4444444444444444', 826, 100500.00))    
-    
+   
 
 class TestDatabaseGetCardBalance(unittest.TestCase):
     def setUp(self):
@@ -101,7 +101,7 @@ class TestDatabaseGetCardBalance(unittest.TestCase):
         self.assertEqual(self.db.get_card_balance('', self.currency), None)
 
 
-class TestDatabaseAccountExists(unittest.TestCase):
+class TestDatabaseCardHasAccount(unittest.TestCase):
     def setUp(self):
         self.db_name = 'tests.db'
         self.db = Database(self.db_name)
@@ -112,14 +112,14 @@ class TestDatabaseAccountExists(unittest.TestCase):
     def tearDown(self):
         os.remove(self.db_name)
 
-    def test_account_exists(self):
-        self.assertTrue(self.db.account_exists(self.card, self.currency))
+    def test_card_has_account(self):
+        self.assertTrue(self.db.card_has_account(self.card, self.currency))
 
     def test_account_doesnt_exists_wrong_card(self):
-        self.assertFalse(self.db.account_exists('192830918039', self.currency))
+        self.assertFalse(self.db.card_has_account('192830918039', self.currency))
     
     def test_account_doesnt_exists_wrong_currency(self):
-        self.assertFalse(self.db.account_exists(self.card, 643))
+        self.assertFalse(self.db.card_has_account(self.card, 643))
 
 
 class TestDatabaseUpdateCardBalance(unittest.TestCase):
@@ -146,6 +146,7 @@ class TestDatabaseUpdateCardBalance(unittest.TestCase):
         new_balance = 12.34
         self.assertEqual(self.db.update_card_balance(self.card, 840, new_balance), None)
         self.assertEqual(self.db.get_card_balance(self.card, 840), None)
-
+"""
+"""
 if __name__ == '__main__':
     unittest.main()
