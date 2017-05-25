@@ -46,11 +46,22 @@ class TestDatabaseInsertCardRecord(unittest.TestCase):
         self.db_name = 'tests.db'
         self.db = Database(self.db_name)
 
+    def tearDown(self):
+        os.remove(self.db_name)
+
     def test_insert_valid_card_record(self):
         self.assertTrue(self.db.insert_card_record(('8930011234567890', 100500.00, 826)))
 
     def test_insert_invalid_card_record(self):
+        self.assertFalse(self.db.insert_card_record(('8930011234567890', 100500.00)))
+
+    def test_insert_duplicate_card_records(self):
         self.assertTrue(self.db.insert_card_record(('8930011234567890', 100500.00, 826)))
+        self.assertFalse(self.db.insert_card_record(('8930011234567890', 100500.00, 826)))
+
+    def test_insert_differenct_card_records(self):
+        self.assertTrue(self.db.insert_card_record(('3333333333333333', 100500.00, 826)))
+        self.assertTrue(self.db.insert_card_record(('4444444444444444', 100500.00, 826)))    
     
 if __name__ == '__main__':
     unittest.main()

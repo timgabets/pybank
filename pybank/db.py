@@ -30,8 +30,8 @@ class Database:
 		try:
 			self.conn.execute('insert into CARDS values(?,?,?)', card_record)
 			self.conn.commit()
-		except sqlite3.IntegrityError as e:
-			print('Error inserting into CARDS: ' + e)
+		except (sqlite3.IntegrityError,sqlite3.ProgrammingError) as e:
+			print(e)
 			return False
 
 		return True
