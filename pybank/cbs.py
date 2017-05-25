@@ -12,6 +12,8 @@ from bpc8583.tools import get_response
 from tracetools.tracetools import trace
 from pynblock.tools import B2raw
 
+from pybank.db import Database
+
 class CBS:
     def __init__(self, host=None, port=None):
         if host:

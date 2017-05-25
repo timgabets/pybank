@@ -3,6 +3,7 @@
 import unittest
 
 from pybank.cbs import CBS
+from pybank.db import Database 
 
 class TestGetMessageLength(unittest.TestCase):
     
@@ -37,6 +38,11 @@ class TestGetBalanceString(unittest.TestCase):
 
     def test_get_balance_string_unstripped(self):
         self.assertEqual(self.cbs.get_balance_string('  -1234.59 ', '840'), '016D000000123459840')
+
+
+class TestDatabase(unittest.TestCase):
+    def setUp(self):
+        self.db = Database()
 
 if __name__ == '__main__':
     unittest.main()
