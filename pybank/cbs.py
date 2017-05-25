@@ -60,7 +60,10 @@ class CBS:
         """
         TODO: check currency exponent, currently using 2 by default
         """
-        return amount / 100.0 
+        if amount:
+            return amount / 100.0 
+        else:
+            return .0
 
 
     def connect(self):
@@ -78,21 +81,22 @@ class CBS:
         print('Connected to {}:{}'.format(self.host, self.port))
 
 
-    def process_trxn_balance_inquiry(self, response):
-        card_number = response.FieldData(2)
-        currency_code = response.FieldData(49)
+    def process_trxn_balance_inquiry(self, request, response):
+        card_number = request.FieldData(2)
+        currency_code = request.FieldData(49)
 
         available_balance = self.db.get_card_balance(card_number, currency_code)
 
         response.FieldData(54, self.get_balance_string(available_balance, currency_code))
         response.FieldData(39, '00')
 
-    def process_trxn_debit_account(self, response):
+
+    def process_trxn_debit_account(self, request, response):
         """
         """
-        card_number = response.FieldData(2)
-        currency_code = response.FieldData(51)
-        amount_cardholder_billing = self.get_float_amount(response.FieldData(6), currency_code)
+        card_number = request.FieldData(2)
+        currency_code = request.FieldData(51)
+        amount_cardholder_billing = self.get_float_amount(request.FieldData(6), currency_code)
 
         available_balance = self.db.get_card_balance(card_number, currency_code)
 
@@ -107,6 +111,19 @@ class CBS:
                 response.FieldData(39, self.responses['Insufficient funds'])
         else:
             response.FieldData(39, self.responses['Invalid account number'])
+
+
+    def init_response_message(self, request):
+        """
+        """
+        response = ISO8583(None, IsoSpec1987BPC())
+        response.MTI(get_response(request.get_MTI()))
+
+        # Copy some key fields from original message:
+        for field in [2, 3, 4, 5, 6, 11, 12, 14, 15, 17, 32, 37, 48, 49, 50, 51, 102]:
+            response.FieldData(field, request.FieldData(field))
+
+        return response
 
 
     def run(self):
@@ -124,25 +141,17 @@ class CBS:
                     request = ISO8583(data[2:], IsoSpec1987BPC())
                     request.Print()
 
-                    response = ISO8583(data[2:], IsoSpec1987BPC())
-                    response.MTI(get_response(request.get_MTI()))            
-                    
-                    processing_code = str(request.FieldData(3)).zfill(6)
-                    
-                    if processing_code[0:2] == '31':
-                        # Balance
-                        self.process_trxn_balance_inquiry(response)
-                    elif processing_code[0:2] in ['00', '01']:
-                        # Putchase or ATM Cash
-                        self.process_trxn_debit_account(response)
-                    else:
-                        response.FieldData(39, self.responses['Approval'])
-                        
-                    # TODO: fix these fields:
-                    response.RemoveField(9)
-                    response.RemoveField(10)
-                    response.RemoveField(32)
-                    response.RemoveField(42)
+                    response = self.init_response_message(request)
+                    if request.FieldData(3) != None:
+                        processing_code = str(request.FieldData(3)).zfill(6)
+                        if processing_code[0:2] == '31':
+                            # Balance
+                            self.process_trxn_balance_inquiry(request, response)
+                        elif processing_code[0:2] in ['00', '01']:
+                            # Purchase or ATM Cash
+                            self.process_trxn_debit_account(request, response)
+                        else:
+                            response.FieldData(39, self.responses['Approval'])
 
                     response.Print()
                     
