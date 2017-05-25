@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import unittest
+import os
 
 from pybank.cbs import CBS
 from pybank.db import Database 
@@ -40,9 +41,16 @@ class TestGetBalanceString(unittest.TestCase):
         self.assertEqual(self.cbs.get_balance_string('  -1234.59 ', '840'), '016D000000123459840')
 
 
-class TestDatabase(unittest.TestCase):
+class TestDatabaseInsertCardRecord(unittest.TestCase):
     def setUp(self):
-        self.db = Database()
+        self.db_name = 'tests.db'
+        self.db = Database(self.db_name)
 
+    def test_insert_valid_card_record(self):
+        self.assertTrue(self.db.insert_card_record(('8930011234567890', 100500.00, 826)))
+
+    def test_insert_invalid_card_record(self):
+        self.assertTrue(self.db.insert_card_record(('8930011234567890', 100500.00, 826)))
+    
 if __name__ == '__main__':
     unittest.main()
