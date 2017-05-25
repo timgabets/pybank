@@ -42,8 +42,34 @@ class Database:
 		except (sqlite3.IntegrityError,sqlite3.ProgrammingError) as e:
 			print(e)
 			return False
-
 		return True
+
+
+	def update_card_balance(self, card, currency, new_balance):
+		"""
+		"""
+		if self.account_exists(card, currency):
+			try:
+				t = (new_balance, card, currency)
+				self.cursor.execute('update CARDS set balance=? where card_no=? and currency=?', t)
+				self.conn.commit()
+				return True
+			except:
+				return False
+		else:
+			return None
+
+
+	def account_exists(self, card, currency):
+		"""
+		"""
+		t = (card,currency)
+		self.cursor.execute('select 1 from CARDS where card_no=? and currency=?', t)
+		row = self.cursor.fetchone()
+		if row:
+			return True
+		else:
+			return False
 
 
 

@@ -3,6 +3,7 @@
 import socket
 import sys
 import struct
+import sqlite3
 
 from binascii import hexlify
 
@@ -29,6 +30,10 @@ class CBS:
                 sys.exit()
         else:
             self.port = 3388
+
+        self.db_name = 'cbs.db'
+        self.conn = sqlite3.connect(self.db_name)
+        self.db = self.conn.cursor()
 
 
     def get_message_length(self, message):
@@ -68,6 +73,20 @@ class CBS:
         print('Connected to {}:{}'.format(self.host, self.port))
 
 
+    def process_trxn_balance_inquiry(self, response):
+        account_number = str(response.FieldData(2))
+        currency_code = str(response.FieldData(49))
+
+        print(account_number)
+
+        t = (account_number,)
+        self.db.execute('select * from CARDS where card_no=?', t)
+        print(self.db.fetchone())
+
+        response.FieldData(54, '007' + self.get_balance_string('1234.56', '643'))
+        response.FieldData(39, '00')
+
+
     def run(self):
         """
         """
@@ -89,9 +108,10 @@ class CBS:
                     processing_code = str(request.FieldData(3)).zfill(6)
                     
                     if processing_code[0:2] == '31':
-                        response.FieldData(54, '007' + self.get_balance_string('1234.56', '643'))
-
-                    response.FieldData(39, '000')
+                        self.process_trxn_balance_inquiry(response)
+                    else:
+                        response.FieldData(39, '000')
+                        
                     # TODO: fix these fields:
                     response.RemoveField(9)
                     response.RemoveField(10)

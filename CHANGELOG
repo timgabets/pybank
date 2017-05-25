@@ -1,3 +1,4 @@
 May 2017
+	0.12 Database class methods get_card_balance(), insert_card_record(), update_card_balance(), account_exists()
 	0.11 Fixed trace() raise() caused by tracetools changes in v0.23
 	0.10 Initial setup - code moved from bpc8583 library examples
