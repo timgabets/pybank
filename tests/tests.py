@@ -32,13 +32,13 @@ class TestGetBalanceString(unittest.TestCase):
         self.assertEqual(self.cbs.get_balance_string('', ''), '')
 
     def test_get_balance_string_positive(self):
-        self.assertEqual(self.cbs.get_balance_string('1234.56', '643'), '016C000000123456643')
+        self.assertEqual(self.cbs.get_balance_string(1234.56, '643'), '007016C000000123456643')
+
+    def test_get_balance_string_positive_no_decimals(self):
+        self.assertEqual(self.cbs.get_balance_string(1234, '643'), '007016C000000123400643')
 
     def test_get_balance_string_negative(self):
-        self.assertEqual(self.cbs.get_balance_string('-1234.59', '826'), '016D000000123459826')
-
-    def test_get_balance_string_unstripped(self):
-        self.assertEqual(self.cbs.get_balance_string('  -1234.59 ', '840'), '016D000000123459840')
+        self.assertEqual(self.cbs.get_balance_string(-1234.59, '826'), '007016D000000123459826')
 
 
 class TestDatabaseInsertCardRecord(unittest.TestCase):

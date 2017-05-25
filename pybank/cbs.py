@@ -31,9 +31,7 @@ class CBS:
         else:
             self.port = 3388
 
-        self.db_name = 'cbs.db'
-        self.conn = sqlite3.connect(self.db_name)
-        self.db = self.conn.cursor()
+        self.db = Database('cbs.db')
 
 
     def get_message_length(self, message):
@@ -47,15 +45,15 @@ class CBS:
         if not balance or not currency_code:
             return ''
     
-        if float(balance) > 0:
+        if balance > 0:
             amount_sign = 'C'
         else:
             amount_sign = 'D'
     
-        balance_formatted = balance.replace(' ', '').replace('.', '').replace('-', '').zfill(12)
+        balance_formatted = '{0:.2f}'.format(balance).replace(' ', '').replace('.', '').replace('-', '').zfill(12)
         balance_string = amount_sign + balance_formatted + currency_code
     
-        return str(len(balance_string)).zfill(3) + balance_string
+        return '007' + str(len(balance_string)).zfill(3) + balance_string
 
 
     def connect(self):
@@ -74,16 +72,12 @@ class CBS:
 
 
     def process_trxn_balance_inquiry(self, response):
-        account_number = str(response.FieldData(2))
-        currency_code = str(response.FieldData(49))
+        account_number = response.FieldData(2)
+        currency_code = response.FieldData(49)
 
-        print(account_number)
+        available_balance = self.db.get_card_balance(account_number, currency_code)
 
-        t = (account_number,)
-        self.db.execute('select * from CARDS where card_no=?', t)
-        print(self.db.fetchone())
-
-        response.FieldData(54, '007' + self.get_balance_string('1234.56', '643'))
+        response.FieldData(54, self.get_balance_string(available_balance, currency_code))
         response.FieldData(39, '00')
 
 
