@@ -75,8 +75,8 @@ class CBS:
 
                 while True:
                     data = self.sock.recv(4096)
-                    if len(data) > 0:
-                        trace('<< {} bytes received: '.format(len(data)), data)
+                    #if len(data) > 0:
+                    #    trace('<< {} bytes received: '.format(len(data)), data)
                     
                     request = ISO8583(data[2:], IsoSpec1987BPC())
                     request.Print()
@@ -87,7 +87,7 @@ class CBS:
                     processing_code = str(request.FieldData(3)).zfill(6)
                     
                     if processing_code[0:2] == '31':
-                        response.FieldData(54, '007' + get_balance_string('1234.56', '643'))
+                        response.FieldData(54, '007' + self.get_balance_string('1234.56', '643'))
 
                     response.FieldData(39, '000')
                     # TODO: fix these fields:
@@ -99,9 +99,9 @@ class CBS:
                     response.Print()
                     
                     data = response.BuildIso()
-                    data = get_message_length(data) + data
+                    data = self.get_message_length(data) + data
                     self.sock.send(data)
-                    trace('>> {} bytes sent:'.format(len(data)), data)
+                    #trace('>> {} bytes sent:'.format(len(data)), data)
         
             except ParseError:
                 print('Connection closed')
