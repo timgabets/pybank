@@ -1,4 +1,6 @@
 May 2017
+	0.21 repsonse codes changed to 3-digit ones
+	0.20 Dummy reversal processing
 	0.19 checking balance precision (hardcoded to 2 digits after decimal point)
 	0.18 settle_auth_advice() for 120 messages
 	0.17 Copy DE24 from original message

@@ -32,7 +32,7 @@ class CBS:
             self.port = 3388
 
         self.db = Database('cbs.db')
-        self.responses = {'Approval': '00', 'Invalid account number': '14', 'Insufficient funds': '51', }
+        self.responses = {'Approval': '000', 'Invalid account number': '914', 'Insufficient funds': '915', }
 
 
     def get_message_length(self, message):
@@ -127,6 +127,18 @@ class CBS:
         response.FieldData(39, self.responses['Approval'])
 
 
+    def settle_reversal(self, request, response):
+        """
+        """
+        card_number = request.FieldData(2)
+        currency_code = request.FieldData(51)
+        amount_cardholder_billing = self.get_float_amount(request.FieldData(6), currency_code)
+
+        available_balance = self.db.get_card_balance(card_number, currency_code)
+        self.db.update_card_balance(card_number, currency_code, available_balance + amount_cardholder_billing)
+        response.FieldData(39, self.responses['Approval'])
+
+
     def init_response_message(self, request):
         """
         """
@@ -189,6 +201,11 @@ class CBS:
                         else:
                             response.FieldData(39, self.responses['Approval'])
 
+                    elif MTI in ['400', '420']:
+                        # Reversal
+                        if trxn_type in ['00', '01']:
+                            # Purchase or ATM Cash
+                            self.settle_reversal(request, response)
 
                     response.Print()
                     
