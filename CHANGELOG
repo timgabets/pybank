@@ -1,4 +1,5 @@
 May 2017
+	0.25 README -> README.rst
 	0.24 recv() and send() routines
 	0.23 checking logon response code
 	0.22 send logon request
