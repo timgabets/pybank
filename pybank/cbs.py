@@ -122,7 +122,7 @@ class CBS:
         response.MTI(get_response(request.get_MTI()))
 
         # Copy some key fields from original message:
-        for field in [2, 3, 4, 5, 6, 11, 12, 14, 15, 17, 32, 37, 48, 49, 50, 51, 102]:
+        for field in [2, 3, 4, 5, 6, 11, 12, 14, 15, 17, 24, 32, 37, 48, 49, 50, 51, 102]:
             response.FieldData(field, request.FieldData(field))
 
         return response

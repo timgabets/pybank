@@ -1,4 +1,5 @@
 May 2017
+	0.17 Copy DE24 from original message
 	0.16 process_trxn_balance_inquiry() takes currency from DE51, not DE49
 	0.15 CARDS and ACCOUNTS tables
 	0.14 proper request/repsonse message copying
