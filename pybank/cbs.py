@@ -6,6 +6,7 @@ import struct
 import sqlite3
 
 from binascii import hexlify
+from time import sleep
 
 from bpc8583.ISO8583 import ISO8583, MemDump, ParseError
 from bpc8583.spec import IsoSpec, IsoSpec1987ASCII, IsoSpec1987BPC
@@ -168,25 +169,32 @@ class CBS:
     def send_logon_handshake(self):
         """
         """
-        request = ISO8583(None, IsoSpec1987BPC())
-
-        request.MTI('1804')
-        request.FieldData(11, get_stan())
-        request.FieldData(12, get_datetime_with_year())
-        request.FieldData(24, 801)
-
-        request.Print()
-        data = request.BuildIso()
-        data = self.get_message_length(data) + data
-        self.sock.send(data)
-        trace(title='>> {} bytes sent:'.format(len(data)), data=data)
-
-        data = self.sock.recv(4096)
-        if len(data) > 0:
-            trace(title='<< {} bytes received: '.format(len(data)), data=data)
-                    
-        response = ISO8583(data[2:], IsoSpec1987BPC())
-        response.Print()
+        while True:
+            request = ISO8583(None, IsoSpec1987BPC())
+    
+            request.MTI('1804')
+            request.FieldData(11, get_stan())
+            request.FieldData(12, get_datetime_with_year())
+            request.FieldData(24, 801)
+    
+            request.Print()
+            data = request.BuildIso()
+            data = self.get_message_length(data) + data
+            self.sock.send(data)
+            trace(title='>> {} bytes sent:'.format(len(data)), data=data)
+    
+            data = self.sock.recv(4096)
+            if len(data) > 0:
+                trace(title='<< {} bytes received: '.format(len(data)), data=data)
+                        
+            response = ISO8583(data[2:], IsoSpec1987BPC())
+            response.Print()
+    
+            if response.FieldData(24) != 801 and response.FieldData(39) != '000':
+                print('\tLogon failed')
+                sleep(5)
+            else:
+                break
 
 
     def run(self):
