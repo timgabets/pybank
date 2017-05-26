@@ -180,21 +180,35 @@ class CBS:
             request.Print()
             data = request.BuildIso()
             data = self.get_message_length(data) + data
-            self.sock.send(data)
-            trace(title='>> {} bytes sent:'.format(len(data)), data=data)
+            self.send(data)
     
-            data = self.sock.recv(4096)
-            if len(data) > 0:
-                trace(title='<< {} bytes received: '.format(len(data)), data=data)
-                        
-            response = ISO8583(data[2:], IsoSpec1987BPC())
+            data = self.recv()
+            response = ISO8583(data, IsoSpec1987BPC())
             response.Print()
     
-            if response.FieldData(24) != 801 and response.FieldData(39) != '000':
+            if response.get_MTI() != '1814' or response.FieldData(24) != 801 or response.FieldData(39) != '000':
                 print('\tLogon failed')
                 sleep(5)
             else:
                 break
+
+
+    def recv(self):
+        """
+        """
+        data = self.sock.recv(4096)
+        if len(data) > 0:
+            trace(title='<< {} bytes received: '.format(len(data)), data=data)
+            return data[2:]
+        else:
+            return None
+
+
+    def send(self, data):
+        """
+        """
+        self.sock.send(data)
+        trace(title='>> {} bytes sent:'.format(len(data)), data=data)
 
 
     def run(self):
@@ -206,11 +220,11 @@ class CBS:
                 self.send_logon_handshake()
 
                 while True:
-                    data = self.sock.recv(4096)
-                    if len(data) > 0:
-                        trace(title='<< {} bytes received: '.format(len(data)), data=data)
-                    
-                    request = ISO8583(data[2:], IsoSpec1987BPC())
+                    data = self.recv() 
+                    if not data:
+                        raise ParseError
+
+                    request = ISO8583(data, IsoSpec1987BPC())
                     request.Print()
 
                     response = self.init_response_message(request)
@@ -247,8 +261,7 @@ class CBS:
                     
                     data = response.BuildIso()
                     data = self.get_message_length(data) + data
-                    self.sock.send(data)
-                    trace(title='>> {} bytes sent:'.format(len(data)), data=data)
+                    self.send(data)
         
             except ParseError:
                 print('Connection closed')
