@@ -115,6 +115,18 @@ class CBS:
             response.FieldData(39, self.responses['Invalid account number'])
 
 
+    def settle_auth_advice(self, request, response):
+        """
+        """
+        card_number = request.FieldData(2)
+        currency_code = request.FieldData(51)
+        amount_cardholder_billing = self.get_float_amount(request.FieldData(6), currency_code)
+
+        available_balance = self.db.get_card_balance(card_number, currency_code)
+        self.db.update_card_balance(card_number, currency_code, available_balance - amount_cardholder_billing)
+        response.FieldData(39, self.responses['Approval'])
+
+
     def init_response_message(self, request):
         """
         """
@@ -126,6 +138,16 @@ class CBS:
             response.FieldData(field, request.FieldData(field))
 
         return response
+
+
+    def get_transaction_type(self, request):
+        """
+        """
+        if request.FieldData(3) != None:
+            processing_code = str(request.FieldData(3)).zfill(6)
+            return processing_code[0:2]
+        else:
+            return None
 
 
     def run(self):
@@ -144,16 +166,29 @@ class CBS:
                     request.Print()
 
                     response = self.init_response_message(request)
-                    if request.FieldData(3) != None:
-                        processing_code = str(request.FieldData(3)).zfill(6)
-                        if processing_code[0:2] == '31':
+
+                    MTI = str(request.get_MTI()).zfill(4)[-3:]
+                    trxn_type = self.get_transaction_type(request)
+
+                    if MTI in ['100', '200']:
+                        # Authorization request or financial request
+                        if trxn_type == '31':
                             # Balance
                             self.process_trxn_balance_inquiry(request, response)
-                        elif processing_code[0:2] in ['00', '01']:
+                        elif trxn_type in ['00', '01']:
                             # Purchase or ATM Cash
                             self.process_trxn_debit_account(request, response)
                         else:
                             response.FieldData(39, self.responses['Approval'])
+
+                    elif MTI in ['120']:
+                        # Authorization advice
+                        if trxn_type in ['00', '01']:
+                            # Purchase or ATM Cash
+                            self.settle_auth_advice(request, response)
+                        else:
+                            response.FieldData(39, self.responses['Approval'])
+
 
                     response.Print()
                     
