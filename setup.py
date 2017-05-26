@@ -4,7 +4,7 @@ setup(name='pybank',
       version='0.25',
       
       description='Core Banking Simulator',
-      long_description=open('README').read(),
+      long_description=open('README.rst').read(),
       
       classifiers=[
         'License :: OSI Approved :: GNU Lesser General Public License v2 (LGPLv2)',
