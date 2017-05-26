@@ -9,7 +9,8 @@ from binascii import hexlify
 
 from bpc8583.ISO8583 import ISO8583, MemDump, ParseError
 from bpc8583.spec import IsoSpec, IsoSpec1987ASCII, IsoSpec1987BPC
-from bpc8583.tools import get_response
+from bpc8583.tools import get_response, get_stan, get_datetime_with_year
+
 from tracetools.tracetools import trace
 from pynblock.tools import B2raw
 
@@ -79,6 +80,8 @@ class CBS:
             print('Error connecting to {}:{} - {}'.format(self.host, self.port, msg))
             sys.exit()
         print('Connected to {}:{}'.format(self.host, self.port))
+
+
 
 
     def process_trxn_balance_inquiry(self, request, response):
@@ -162,12 +165,37 @@ class CBS:
             return None
 
 
+    def send_logon_handshake(self):
+        """
+        """
+        request = ISO8583(None, IsoSpec1987BPC())
+
+        request.MTI('1804')
+        request.FieldData(11, get_stan())
+        request.FieldData(12, get_datetime_with_year())
+        request.FieldData(24, 801)
+
+        request.Print()
+        data = request.BuildIso()
+        data = self.get_message_length(data) + data
+        self.sock.send(data)
+        trace(title='>> {} bytes sent:'.format(len(data)), data=data)
+
+        data = self.sock.recv(4096)
+        if len(data) > 0:
+            trace(title='<< {} bytes received: '.format(len(data)), data=data)
+                    
+        response = ISO8583(data[2:], IsoSpec1987BPC())
+        response.Print()
+
+
     def run(self):
         """
         """
         while True:
             try:
                 self.connect()
+                self.send_logon_handshake()
 
                 while True:
                     data = self.sock.recv(4096)
