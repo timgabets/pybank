@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='pybank',
-      version='0.18',
+      version='0.19',
       
       description='Core Banking Simulator',
       long_description=open('README').read(),

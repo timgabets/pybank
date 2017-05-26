@@ -47,7 +47,8 @@ class Database:
 		"""
 		"""
 		account_number = self.generate_account_number()
-		t = (account_number, currency, balance)
+		# TODO: check currency exponent
+		t = (account_number, currency, format(balance, '.2f'))
 		try:
 			self.conn.execute('insert into ACCOUNTS(account_number, currency, balance) values(?,?,?)', t)
 			self.conn.commit()
@@ -79,7 +80,8 @@ class Database:
 		"""
 		if self.card_has_account(card, currency):
 			try:
-				t = (new_balance, card, currency)
+				# TODO: check currency exponent
+				t = (format(new_balance, '.2f'), card, currency)
 				self.cursor.execute('update ACCOUNTS set balance=? where account_number=(select account from cards where card_number=? and currency=?)', t)
 				self.conn.commit()
 				return True

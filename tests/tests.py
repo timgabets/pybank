@@ -73,6 +73,10 @@ class TestDatabaseInsertCardRecord(unittest.TestCase):
         self.assertTrue(self.db.insert_card_record('3333333333333333', 826, 100500.00))
         self.assertTrue(self.db.insert_card_record('4444444444444444', 826, 100500.00))    
    
+    def test_insert_valid_card_record_check_precision(self):
+        self.assertTrue(self.db.insert_card_record('8930011234567890', 826, 100500.00000007))
+        self.assertEqual(self.db.get_card_balance('8930011234567890', 826), 100500.0)
+
 
 class TestDatabaseGetCardBalance(unittest.TestCase):
     def setUp(self):
@@ -146,7 +150,12 @@ class TestDatabaseUpdateCardBalance(unittest.TestCase):
         new_balance = 12.34
         self.assertEqual(self.db.update_card_balance(self.card, 840, new_balance), None)
         self.assertEqual(self.db.get_card_balance(self.card, 840), None)
-"""
-"""
+
+    def test_update_card_balance_check_precision(self):
+        new_balance = 17.890000000003
+        self.assertTrue(self.db.update_card_balance(self.card, 826, new_balance))
+        self.assertEqual(self.db.get_card_balance(self.card, 826), 17.89)
+
+
 if __name__ == '__main__':
     unittest.main()
