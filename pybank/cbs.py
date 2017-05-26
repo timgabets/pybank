@@ -58,6 +58,7 @@ class CBS:
     
         return '007' + str(len(balance_string)).zfill(3) + balance_string
 
+
     def get_float_amount(self, amount, currency):
         """
         TODO: check currency exponent, currently using 2 by default
@@ -83,8 +84,6 @@ class CBS:
         print('Connected to {}:{}'.format(self.host, self.port))
 
 
-
-
     def process_trxn_balance_inquiry(self, request, response):
         card_number = request.FieldData(2)
         currency_code = request.FieldData(51)
@@ -94,7 +93,7 @@ class CBS:
         available_balance = self.db.get_card_balance(card_number, currency_code)
 
         response.FieldData(54, self.get_balance_string(available_balance, currency_code))
-        response.FieldData(39, '00')
+        response.FieldData(39, self.responses['Approval'])
 
 
     def process_trxn_debit_account(self, request, response):
