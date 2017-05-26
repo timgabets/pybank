@@ -1,5 +1,11 @@
 pybank
 =======
 
-Python library implementing the primitive Core Banking system (CBS) emulator
+A python library that implements the primitive Core Banking system (CBS) emulator - .
 
+Usage:
+ from pybank.cbs import CBS
+ cbs = CBS(host=ip, port=port)
+ cbs.run()
+
+examples/cbs_example.py is an example of core banking system emulator application, that interacts connects to authorization switch through ISO8583:1993 protocol. Accounts, transactions and balances are stored in a local sqlite3 database.
