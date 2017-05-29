@@ -19,10 +19,7 @@ from pybank.db import Database
 
 class CBS:
     def __init__(self, host=None, port=None):
-        if host:
-            self.host = host
-        else:
-            self.host = '127.0.0.1'
+        self.host = host if host else '127.0.0.1'
 
         if port:
             try:
@@ -48,10 +45,7 @@ class CBS:
         if not balance or not currency_code:
             return ''
     
-        if balance > 0:
-            amount_sign = 'C'
-        else:
-            amount_sign = 'D'
+        amount_sign = 'C' if balance > 0 else 'D'
     
         balance_formatted = '{0:.2f}'.format(balance).replace(' ', '').replace('.', '').replace('-', '').zfill(12)
         balance_string = amount_sign + balance_formatted + currency_code
@@ -63,10 +57,7 @@ class CBS:
         """
         TODO: check currency exponent, currently using 2 by default
         """
-        if amount:
-            return amount / 100.0 
-        else:
-            return .0
+        return amount / 100.0 if amount else .0
 
 
     def connect(self):

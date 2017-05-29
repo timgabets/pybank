@@ -5,10 +5,7 @@ from math import pow
 
 class Database:
 	def __init__(self, db_name=None):
-		if db_name:
-			self.db_name = db_name
-		else:
-			self.db_name = 'cbs.db'
+		self.db_name = db_name if db_name else 'cbs.db'
 
 		self.conn = sqlite3.connect(self.db_name)
 		self.cursor = self.conn.cursor()
@@ -31,10 +28,7 @@ class Database:
 		t = (card,currency_code)
 		self.cursor.execute('select balance from ACCOUNTS where account_number=(select account from CARDS where card_number=? and currency=?)', t)
 		row = self.cursor.fetchone()
-		if row:
-			return row[0]
-		else:
-			return None
+		return row[0] if row else None
 
 
 	def generate_account_number(self):
@@ -97,10 +91,8 @@ class Database:
 		t = (card,currency)
 		self.cursor.execute('select 1 from CARDS where card_number=? and currency=?', t)
 		row = self.cursor.fetchone()
-		if row:
-			return True
-		else:
-			return False
+		return True if row else False
+
 
 
 
