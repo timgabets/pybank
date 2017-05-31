@@ -92,7 +92,3 @@ class Database:
 		self.cursor.execute('select 1 from CARDS where card_number=? and currency=?', t)
 		row = self.cursor.fetchone()
 		return True if row else False
-
-
-
-

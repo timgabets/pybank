@@ -1,4 +1,5 @@
 May 2017
+	0.29 tox support
 	0.28 Using ternary conditional operator
 	0.27 README usage case change from balance inquiry to authorization request
 	0.26 Added some usage stuff to README
