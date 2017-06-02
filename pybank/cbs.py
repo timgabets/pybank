@@ -31,7 +31,7 @@ class CBS:
             self.port = 3388
 
         self.db = Database('cbs.db')
-        self.responses = {'Approval': '000', 'Invalid account number': '914', 'Insufficient funds': '915', }
+        self.responses = {'Approval': '000', 'Invalid Amount': '903', 'Invalid account number': '914', 'Insufficient funds': '915', }
 
 
     def get_message_length(self, message):
@@ -97,14 +97,17 @@ class CBS:
         available_balance = self.db.get_card_balance(card_number, currency_code)
 
         if available_balance:
-            if available_balance > amount_cardholder_billing:
-                self.db.update_card_balance(card_number, currency_code, available_balance - amount_cardholder_billing)
-                response.FieldData(39, self.responses['Approval'])
-
-                available_balance = self.db.get_card_balance(card_number, currency_code)
-                response.FieldData(54, self.get_balance_string(available_balance, currency_code))
+            if amount_cardholder_billing:
+                if available_balance > amount_cardholder_billing:
+                    self.db.update_card_balance(card_number, currency_code, available_balance - amount_cardholder_billing)
+                    response.FieldData(39, self.responses['Approval'])
+    
+                    available_balance = self.db.get_card_balance(card_number, currency_code)
+                    response.FieldData(54, self.get_balance_string(available_balance, currency_code))
+                else:
+                    response.FieldData(39, self.responses['Insufficient funds'])
             else:
-                response.FieldData(39, self.responses['Insufficient funds'])
+                response.FieldData(39, self.responses['Invalid Amount'])
         else:
             response.FieldData(39, self.responses['Invalid account number'])
 
