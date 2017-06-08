@@ -1,4 +1,5 @@
 June 2017
+	0.31 Copy Amount, cardholder billing -> Amount, settlement
 	0.30 amount_cardholder_billing > 0 check in process_trxn_debit_account()
 
 May 2017
