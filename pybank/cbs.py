@@ -100,12 +100,14 @@ class CBS:
             if amount_cardholder_billing:
                 if available_balance > amount_cardholder_billing:
                     self.db.update_card_balance(card_number, currency_code, available_balance - amount_cardholder_billing)
+
                     response.FieldData(39, self.responses['Approval'])
     
                     available_balance = self.db.get_card_balance(card_number, currency_code)
                     response.FieldData(54, self.get_balance_string(available_balance, currency_code))
                 else:
                     response.FieldData(39, self.responses['Insufficient funds'])
+                    response.FieldData(54, self.get_balance_string(available_balance, currency_code))
             else:
                 response.FieldData(39, self.responses['Invalid Amount'])
         else:
@@ -145,6 +147,12 @@ class CBS:
         # Copy some key fields from original message:
         for field in [2, 3, 4, 5, 6, 11, 12, 14, 15, 17, 24, 32, 37, 48, 49, 50, 51, 102]:
             response.FieldData(field, request.FieldData(field))
+
+        # Copy Amount, cardholder billing -> Amount, settlement
+        response.FieldData(5, request.FieldData(6))
+
+        # Copy Currency code, cardholder billing -> Currency code, settlement
+        response.FieldData(50, request.FieldData(51))
 
         return response
 
