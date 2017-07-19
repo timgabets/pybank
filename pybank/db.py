@@ -92,3 +92,12 @@ class Database:
 		self.cursor.execute('select 1 from CARDS where card_number=? and currency=?', t)
 		row = self.cursor.fetchone()
 		return True if row else False
+
+
+	def card_exists(self, card):
+		"""
+		"""
+		t = (card,)
+		self.cursor.execute('select 1 from CARDS where card_number=?', t)
+		row = self.cursor.fetchone()
+		return True if row else False		

@@ -126,6 +126,23 @@ class TestDatabaseCardHasAccount(unittest.TestCase):
         self.assertFalse(self.db.card_has_account(self.card, 643))
 
 
+class TestDatabaseCardExists(unittest.TestCase):
+    def setUp(self):
+        self.db_name = 'tests.db'
+        self.db = Database(self.db_name)
+        self.card = '8930011234567890'
+    
+    def tearDown(self):
+        os.remove(self.db_name)
+
+    def test_card_does_not_exist(self):
+        self.assertFalse(self.db.card_exists(self.card))
+
+    def test_card_exists(self):
+        self.db.insert_card_record(self.card, 643, 100500.00)
+        self.assertTrue(self.db.card_exists(self.card))
+
+
 class TestDatabaseUpdateCardBalance(unittest.TestCase):
     def setUp(self):
         self.db_name = 'tests.db'

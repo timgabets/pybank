@@ -232,6 +232,14 @@ class CBS:
 
                     MTI = str(request.get_MTI()).zfill(4)[-3:]
                     trxn_type = self.get_transaction_type(request)
+                    card_number = request.FieldData(2)
+                    currency_code = request.FieldData(51)
+
+                    if not self.db.card_exists(card_number):
+                        # TODO: command line option to add cards autmatically
+                        print('\nWARNING: Card {} does not exist!\n'.format(card_number));
+                        self.db.insert_card_record(card_number, currency_code, 0);
+
 
                     if MTI in ['100', '200']:
                         # Authorization request or financial request
