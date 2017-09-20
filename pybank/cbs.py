@@ -9,7 +9,7 @@ from binascii import hexlify
 from time import sleep
 
 from bpc8583.ISO8583 import ISO8583, MemDump, ParseError
-from bpc8583.spec import IsoSpec, IsoSpec1987ASCII, IsoSpec1987BPC
+from bpc8583.spec import IsoSpec, IsoSpec1987BPC
 from bpc8583.tools import get_response, get_stan, get_datetime_with_year
 
 from tracetools.tracetools import trace
@@ -91,27 +91,38 @@ class CBS:
         """
         """
         card_number = request.FieldData(2)
-        currency_code = request.FieldData(51)
-        amount_cardholder_billing = self.get_float_amount(request.FieldData(6), currency_code)
+        transaction_currency_code = request.FieldData(49)
+        billing_currency_code = request.FieldData(51)
+        amount_cardholder_billing = self.get_float_amount(request.FieldData(6), billing_currency_code)
 
-        available_balance = self.db.get_card_balance(card_number, currency_code)
+        available_balance = self.db.get_card_balance(card_number, billing_currency_code)
+
+        print('Trying to debit customer. Card [{}], currency [{}], balance before[{}]\n'.format(card_number, billing_currency_code, available_balance));
 
         if available_balance:
+
+            if transaction_currency_code == billing_currency_code and not amount_cardholder_billing:
+                amount_cardholder_billing = self.get_float_amount(request.FieldData(4), billing_currency_code)
+
             if amount_cardholder_billing:
                 if available_balance > amount_cardholder_billing:
-                    self.db.update_card_balance(card_number, currency_code, available_balance - amount_cardholder_billing)
+                    self.db.update_card_balance(card_number, billing_currency_code, available_balance - amount_cardholder_billing)
 
                     response.FieldData(39, self.responses['Approval'])
     
-                    available_balance = self.db.get_card_balance(card_number, currency_code)
-                    response.FieldData(54, self.get_balance_string(available_balance, currency_code))
+                    available_balance = self.db.get_card_balance(card_number, billing_currency_code)
+                    response.FieldData(54, self.get_balance_string(available_balance, billing_currency_code))
+                    print('Debited succesfully');
                 else:
                     response.FieldData(39, self.responses['Insufficient funds'])
-                    response.FieldData(54, self.get_balance_string(available_balance, currency_code))
+                    response.FieldData(54, self.get_balance_string(available_balance, billing_currency_code))
+                    print('Debit failed: insufficient funds');
             else:
                 response.FieldData(39, self.responses['Invalid Amount'])
+                print('Invalid Cardholder billing amount')
         else:
             response.FieldData(39, self.responses['Invalid account number'])
+            print('Invalid account number')
 
 
     def settle_auth_advice(self, request, response):
@@ -245,10 +256,11 @@ class CBS:
                         if trxn_type == '31':
                             # Balance
                             self.process_trxn_balance_inquiry(request, response)
-                        elif trxn_type in ['00', '01']:
+                        elif trxn_type in ['00', '01', '50']:
                             # Purchase or ATM Cash
                             self.process_trxn_debit_account(request, response)
                         else:
+                            print('Unsupported transaction type {}. Responding APPROVAL by default'.format(trxn_type))
                             response.FieldData(39, self.responses['Approval'])
 
                     elif MTI in ['120']:
