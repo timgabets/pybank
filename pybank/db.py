@@ -20,6 +20,7 @@ class Database:
 		self.cursor = self.conn.cursor()
 		self.conn.execute('create table ACCOUNTS (account_number INTEGER, type INTEGER default 0, currency INTEGER, balance real, constraint ACCOUNT_CURRENCY_UK unique(account_number, currency));')
 		self.conn.execute('create table CARDS (card_number INTEGER, currency INTEGER, account INTEGER, constraint CARD_CURRENCY_UK unique(card_number, currency), FOREIGN KEY(account) REFERENCES accounts(account_number));')
+		self.conn.execute("create table TRANSACTIONS (mti number, card_number INTEGER, currency INTEGER, amount INTEGER, timestamp DATETIME DEFAULT(STRFTIME('%Y-%m-%d %H:%M:%f', 'NOW')), prcode TEXT, stan TEXT, rrn TEXT, field48 TEXT, FOREIGN KEY(card_number, currency) REFERENCES cards(card_number, currency));")
 
 
 	def get_card_balance(self, card, currency_code):
@@ -101,3 +102,25 @@ class Database:
 		self.cursor.execute('select 1 from CARDS where card_number=?', t)
 		row = self.cursor.fetchone()
 		return True if row else False		
+
+
+	def insert_transaction_record(self, mti, card, currency, amount, prcode=None, STAN=None, RRN=None, Field48=None):
+		"""
+		"""
+		t = (mti, card, currency, amount, prcode, STAN, RRN, Field48)
+		try:
+			self.conn.execute('insert into TRANSACTIONS(mti, card_number, currency, amount, prcode, STAN, RRN, Field48) values(?,?,?,?,?,?,?,?)', t)
+			self.conn.commit()
+		except (sqlite3.IntegrityError,sqlite3.ProgrammingError) as e:
+			print(e)
+			return False
+		return True
+
+
+	def get_last_transactions(self, card, size=1):
+		"""
+		"""
+		t = (card,)
+		self.cursor.execute('select amount, prcode, mti, timestamp from TRANSACTIONS where card_number=? order by timestamp desc', t)
+		rows = self.cursor.fetchmany(size)
+		return rows

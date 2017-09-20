@@ -174,5 +174,50 @@ class TestDatabaseUpdateCardBalance(unittest.TestCase):
         self.assertEqual(self.db.get_card_balance(self.card, 826), 17.89)
 
 
+class TestDatabaseInsertTransactionRecord(unittest.TestCase):
+    def setUp(self):
+        self.db_name = 'tests.db'
+        self.db = Database(self.db_name)
+        self.db.insert_card_record('8930011234567890', 826, 100500.00)
+
+    def tearDown(self):
+        os.remove(self.db_name)
+
+    def test_insert_valid_transaction_record(self):
+        self.db.insert_transaction_record('1110', '8930011234567890', 826, 30.0, prcode=None);
+        
+        last_trxns = self.db.get_last_transactions('8930011234567890')
+        last_trxn = last_trxns[0]
+        self.assertEqual(last_trxn[0], 30.0 )
+    """
+    def test_insert_valid_transaction_record_with_prcode(self):
+        self.db.insert_transaction_record('8930011234567890', 826, 23.12, '010000');
+        
+        last_trxns = self.db.get_last_transactions('8930011234567890')
+        last_trxn = last_trxns[0]
+        self.assertEqual(last_trxn[0], 23.12 )
+        self.assertEqual(last_trxn[1], '010000' )
+    """
+    def test_get_three_last_transactions(self):
+        self.db.insert_transaction_record('1110', '8930011234567890', 826, 23.12, '010000');
+        self.db.insert_transaction_record('1420', '8930011234567890', 826, 223.44);
+        self.db.insert_transaction_record('1110', '8930011234567890', 826, 19.04, '000000');
+        
+        last_trxns = self.db.get_last_transactions('8930011234567890', 3)
+        first = last_trxns[0]
+        second = last_trxns[1]
+        third = last_trxns[2]
+
+        self.assertEqual(first[0], 19.04 )
+        self.assertEqual(first[1], '000000' )
+
+        self.assertEqual(second[0], 223.44 )
+        self.assertEqual(second[1], None )
+
+        self.assertEqual(third[0], 23.12 )
+        self.assertEqual(third[1], '010000' )
+"""
+"""
+
 if __name__ == '__main__':
     unittest.main()

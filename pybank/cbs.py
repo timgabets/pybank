@@ -87,6 +87,22 @@ class CBS:
         response.FieldData(39, self.responses['Approval'])
 
 
+    def save_transaction(self, request):
+        """
+        """
+        MTI = str(request.get_MTI()).zfill(4)[-3:]
+        card_number = request.FieldData(2)
+        billing_currency_code = request.FieldData(51)
+        amount_cardholder_billing = self.get_float_amount(request.FieldData(6), billing_currency_code)
+        prcode = str(request.FieldData(3)).zfill(6)
+        STAN = request.FieldData(11)
+        RRN = request.FieldData(37)
+        Field48 = request.FieldData(48)
+
+        if amount_cardholder_billing:
+            self.db.insert_transaction_record(mti=MTI, card=card_number, currency=billing_currency_code, amount=amount_cardholder_billing, prcode=prcode, STAN=STAN, RRN=RRN, Field48=Field48);
+
+
     def process_trxn_debit_account(self, request, response):
         """
         """
@@ -113,6 +129,8 @@ class CBS:
                     available_balance = self.db.get_card_balance(card_number, billing_currency_code)
                     response.FieldData(54, self.get_balance_string(available_balance, billing_currency_code))
                     print('Debited succesfully');
+                    self.save_transaction(request)
+
                 else:
                     response.FieldData(39, self.responses['Insufficient funds'])
                     response.FieldData(54, self.get_balance_string(available_balance, billing_currency_code))
@@ -134,6 +152,8 @@ class CBS:
 
         available_balance = self.db.get_card_balance(card_number, currency_code)
         self.db.update_card_balance(card_number, currency_code, available_balance - amount_cardholder_billing)
+        self.save_transaction(request)
+
         response.FieldData(39, self.responses['Approval'])
 
 
@@ -146,6 +166,7 @@ class CBS:
 
         available_balance = self.db.get_card_balance(card_number, currency_code)
         self.db.update_card_balance(card_number, currency_code, available_balance + amount_cardholder_billing)
+        self.save_transaction(request)
         response.FieldData(39, self.responses['Approval'])
 
 

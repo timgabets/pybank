@@ -1,3 +1,7 @@
+
+Septembet 2017 
+	0.34 storing transaction history in TRANSACTIONS table
+
 July 2017
 	0.33 checking card existense only for financial transactions
 	0.32 checking whether the card exists, if no -> add it to DB
