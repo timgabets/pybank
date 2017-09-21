@@ -87,7 +87,64 @@ class CBS:
         response.FieldData(39, self.responses['Approval'])
 
 
-    def save_transaction(self, request):
+    def get_transaction_type_mnemonic(self, prcode):
+        trxn_type = prcode[0:2]
+
+        if trxn_type == '00':
+            return 'PRC'
+        elif trxn_type == '01':
+            return 'WDL'
+        else:
+            return 'OTH'
+
+
+    def get_field62_data(self, trxn_data):
+        """
+        """
+        field_data = ''
+        print_data = '\tStatement data:\n'
+
+        for record in trxn_data:
+            # Date
+            # '2017-09-20 15:12:40.617' -> '170920'
+            date = record[4].split(' ')[0].split('-')
+            field_data += date[0][2:4] + date[1] + date[2]
+            print_data += record[4] + '\t'
+
+            # Transaction type
+            field_data += self.get_transaction_type_mnemonic(record[2])
+            print_data += self.get_transaction_type_mnemonic(record[2]) + '\t'
+
+            # Debit/Credit flag
+            field_data += record[0]
+            print_data += record[0] + ' '
+
+            # Amount
+            amount = str(record[1]).zfill(12)
+            field_data += amount
+            print_data += amount + '\n'
+
+            # Dummy Fee
+            fee_amount = '000000000000'
+            field_data += fee_amount
+
+        print(print_data)
+        return field_data
+
+
+    def process_statement_request(self, request, response):
+        """
+        """
+        card_number = request.FieldData(2)
+
+        trxns = self.db.get_last_transactions(card_number, 10)
+
+        response.FieldData(39, self.responses['Approval'])
+        response.FieldData(48, None)
+        response.FieldData(62, self.get_field62_data(trxns))
+
+
+    def save_transaction(self, request, flag='D'):
         """
         """
         MTI = str(request.get_MTI()).zfill(4)[-3:]
@@ -100,7 +157,7 @@ class CBS:
         Field48 = request.FieldData(48)
 
         if amount_cardholder_billing:
-            self.db.insert_transaction_record(mti=MTI, card=card_number, currency=billing_currency_code, amount=amount_cardholder_billing, prcode=prcode, STAN=STAN, RRN=RRN, Field48=Field48);
+            self.db.insert_transaction_record(mti=MTI, card=card_number, currency=billing_currency_code, amount=amount_cardholder_billing, flag=flag, prcode=prcode, STAN=STAN, RRN=RRN, Field48=Field48);
 
 
     def process_trxn_debit_account(self, request, response):
@@ -129,7 +186,7 @@ class CBS:
                     available_balance = self.db.get_card_balance(card_number, billing_currency_code)
                     response.FieldData(54, self.get_balance_string(available_balance, billing_currency_code))
                     print('Debited succesfully');
-                    self.save_transaction(request)
+                    self.save_transaction(request, 'D')
 
                 else:
                     response.FieldData(39, self.responses['Insufficient funds'])
@@ -152,7 +209,7 @@ class CBS:
 
         available_balance = self.db.get_card_balance(card_number, currency_code)
         self.db.update_card_balance(card_number, currency_code, available_balance - amount_cardholder_billing)
-        self.save_transaction(request)
+        self.save_transaction(request, 'D')
 
         response.FieldData(39, self.responses['Approval'])
 
@@ -166,7 +223,7 @@ class CBS:
 
         available_balance = self.db.get_card_balance(card_number, currency_code)
         self.db.update_card_balance(card_number, currency_code, available_balance + amount_cardholder_billing)
-        self.save_transaction(request)
+        self.save_transaction(request, 'C')
         response.FieldData(39, self.responses['Approval'])
 
 
@@ -280,6 +337,9 @@ class CBS:
                         elif trxn_type in ['00', '01', '50']:
                             # Purchase or ATM Cash
                             self.process_trxn_debit_account(request, response)
+                        elif trxn_type == '39':
+                            # Ministatement
+                            self.process_statement_request(request, response)
                         else:
                             print('Unsupported transaction type {}. Responding APPROVAL by default'.format(trxn_type))
                             response.FieldData(39, self.responses['Approval'])

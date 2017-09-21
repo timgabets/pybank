@@ -20,7 +20,7 @@ class Database:
 		self.cursor = self.conn.cursor()
 		self.conn.execute('create table ACCOUNTS (account_number INTEGER, type INTEGER default 0, currency INTEGER, balance real, constraint ACCOUNT_CURRENCY_UK unique(account_number, currency));')
 		self.conn.execute('create table CARDS (card_number INTEGER, currency INTEGER, account INTEGER, constraint CARD_CURRENCY_UK unique(card_number, currency), FOREIGN KEY(account) REFERENCES accounts(account_number));')
-		self.conn.execute("create table TRANSACTIONS (mti number, card_number INTEGER, currency INTEGER, amount INTEGER, timestamp DATETIME DEFAULT(STRFTIME('%Y-%m-%d %H:%M:%f', 'NOW')), prcode TEXT, stan TEXT, rrn TEXT, field48 TEXT, FOREIGN KEY(card_number, currency) REFERENCES cards(card_number, currency));")
+		self.conn.execute("create table TRANSACTIONS (mti number, card_number INTEGER, currency INTEGER, amount INTEGER, debit_credit_flag CHAR not null default 'D', timestamp DATETIME DEFAULT(STRFTIME('%Y-%m-%d %H:%M:%f', 'NOW')), prcode TEXT, stan TEXT, rrn TEXT, field48 TEXT, FOREIGN KEY(card_number, currency) REFERENCES cards(card_number, currency));")
 
 
 	def get_card_balance(self, card, currency_code):
@@ -28,6 +28,13 @@ class Database:
 		"""
 		t = (card,currency_code)
 		self.cursor.execute('select balance from ACCOUNTS where account_number=(select account from CARDS where card_number=? and currency=?)', t)
+		row = self.cursor.fetchone()
+		return row[0] if row else None
+
+
+	def get_card_default_currency(self, card):
+		t = (card,)
+		self.cursor.execute('select currency from CARDS where card_number=?', t)
 		row = self.cursor.fetchone()
 		return row[0] if row else None
 
@@ -104,12 +111,12 @@ class Database:
 		return True if row else False		
 
 
-	def insert_transaction_record(self, mti, card, currency, amount, prcode=None, STAN=None, RRN=None, Field48=None):
+	def insert_transaction_record(self, mti, card, currency, amount, flag, prcode=None, STAN=None, RRN=None, Field48=None):
 		"""
 		"""
-		t = (mti, card, currency, amount, prcode, STAN, RRN, Field48)
+		t = (mti, card, currency, amount, flag, prcode, STAN, RRN, Field48)
 		try:
-			self.conn.execute('insert into TRANSACTIONS(mti, card_number, currency, amount, prcode, STAN, RRN, Field48) values(?,?,?,?,?,?,?,?)', t)
+			self.conn.execute('insert into TRANSACTIONS(mti, card_number, currency, amount, debit_credit_flag, prcode, STAN, RRN, Field48) values(?,?,?,?,?,?,?,?,?)', t)
 			self.conn.commit()
 		except (sqlite3.IntegrityError,sqlite3.ProgrammingError) as e:
 			print(e)
@@ -121,6 +128,6 @@ class Database:
 		"""
 		"""
 		t = (card,)
-		self.cursor.execute('select amount, prcode, mti, timestamp from TRANSACTIONS where card_number=? order by timestamp desc', t)
+		self.cursor.execute('select debit_credit_flag, amount, prcode, mti, timestamp from TRANSACTIONS where card_number=? order by timestamp desc', t)
 		rows = self.cursor.fetchmany(size)
 		return rows
