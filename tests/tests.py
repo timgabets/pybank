@@ -6,6 +6,13 @@ import os
 from pybank.cbs import CBS
 from pybank.db import Database 
 
+class TestBuildTLVTag(unittest.TestCase):
+    def setUp(self):
+        self.cbs = CBS(host=None, port=None)
+
+    def test_get_float_amount(self):
+       self.assertEqual(self.cbs.build_tlv_tag(29, 'JOHN DOE'), '029008JOHN DOE')
+
 class TestGetFloatAmount(unittest.TestCase):
     def setUp(self):
         self.cbs = CBS(host=None, port=None)
@@ -262,6 +269,7 @@ class TestDatabaseInsertTransactionRecord(unittest.TestCase):
         self.assertEqual(third[0], 'D' )
         self.assertEqual(third[1], 23.12 )
         self.assertEqual(third[2], '010000' )
+
 """
 """
 

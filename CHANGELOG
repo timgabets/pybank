@@ -1,5 +1,6 @@
 
 Septembet 2017 
+	0.36 Cardholder name inquiry (processing code 88) transaction support
 	0.35 processing statement request transactions
 	0.34 storing transaction history in TRANSACTIONS table
 

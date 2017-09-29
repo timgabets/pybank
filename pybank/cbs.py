@@ -38,6 +38,10 @@ class CBS:
         return B2raw(bytes(str(len(message)).zfill(4), 'utf-8'))
 
 
+    def build_tlv_tag(self, tag, value):
+        return str(tag).zfill(3) + str(len(value)).zfill(3) + str(value)
+
+
     def get_balance_string(self, balance, currency_code):
         """
         Get balance string, according to Field 54 description
@@ -130,6 +134,14 @@ class CBS:
 
         print(print_data)
         return field_data
+
+    def process_cardholder_name_inquiry(self, request, response):
+        """
+        """
+        card_number = request.FieldData(2)
+        cardholder_name = self.db.get_cardholder_name(card_number)
+        response.FieldData(48, self.build_tlv_tag(29, cardholder_name))
+        response.FieldData(39, self.responses['Approval'])
 
 
     def process_statement_request(self, request, response):
@@ -340,6 +352,9 @@ class CBS:
                         elif trxn_type == '39':
                             # Ministatement
                             self.process_statement_request(request, response)
+                        elif trxn_type == '88':
+                            # Cardholder name inquiry
+                            self.process_cardholder_name_inquiry(request, response)
                         else:
                             print('Unsupported transaction type {}. Responding APPROVAL by default'.format(trxn_type))
                             response.FieldData(39, self.responses['Approval'])

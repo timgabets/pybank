@@ -18,8 +18,9 @@ class Database:
 	def db_init(self):
 		self.conn = sqlite3.connect(self.db_name)
 		self.cursor = self.conn.cursor()
-		self.conn.execute('create table ACCOUNTS (account_number INTEGER, type INTEGER default 0, currency INTEGER, balance real, constraint ACCOUNT_CURRENCY_UK unique(account_number, currency));')
-		self.conn.execute('create table CARDS (card_number INTEGER, currency INTEGER, account INTEGER, constraint CARD_CURRENCY_UK unique(card_number, currency), FOREIGN KEY(account) REFERENCES accounts(account_number));')
+		self.conn.execute('create table CARDHOLDERS (id INTEGER PRIMARY KEY autoincrement, first_name TEXT, last_name TEXT, city TEXT, address TEXT)');
+		self.conn.execute('create table ACCOUNTS (account_number INTEGER, type INTEGER default 0, currency INTEGER, balance real, cardholder integer, FOREIGN KEY(cardholder) REFERENCES CARDHOLDERS(id), constraint ACCOUNT_CURRENCY_UK unique(account_number, currency));')
+		self.conn.execute('create table CARDS (card_number INTEGER, currency INTEGER, account INTEGER, constraint CARD_CURRENCY_UK unique(card_number, currency), FOREIGN KEY(account) REFERENCES ACCOUNTS(account_number));')
 		self.conn.execute("create table TRANSACTIONS (mti number, card_number INTEGER, currency INTEGER, amount INTEGER, debit_credit_flag CHAR not null default 'D', timestamp DATETIME DEFAULT(STRFTIME('%Y-%m-%d %H:%M:%f', 'NOW')), prcode TEXT, stan TEXT, rrn TEXT, field48 TEXT, FOREIGN KEY(card_number, currency) REFERENCES cards(card_number, currency));")
 
 
@@ -42,7 +43,7 @@ class Database:
 	def generate_account_number(self):
 		"""
 		"""
-		return '408178101000' + str(random.randint(pow(2, 8*2), pow(2, 8*4)))
+		return '999' + str(random.randint(pow(2, 8*2), pow(2, 8*4)))
 
 
 	def create_account(self, currency, balance):
@@ -131,3 +132,11 @@ class Database:
 		self.cursor.execute('select debit_credit_flag, amount, prcode, mti, timestamp from TRANSACTIONS where card_number=? order by timestamp desc', t)
 		rows = self.cursor.fetchmany(size)
 		return rows
+
+	def get_cardholder_name(self, card):
+		t = (card,)
+		self.cursor.execute('select first_name, last_name from cardholders where id = (select id from cards c inner join accounts a on c.account=a.account_number where c.card_number=?)', t)
+		row = self.cursor.fetchone()
+
+		if row:
+			return row[0] + ' ' + row[1]
